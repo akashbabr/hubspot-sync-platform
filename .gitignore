@@ -1,0 +1,16 @@
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Python virtual environment
+.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
