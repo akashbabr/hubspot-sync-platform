@@ -1,0 +1,63 @@
+name: Configuration Validation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validate-configuration:
+    runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: development
+      LOG_LEVEL: INFO
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_NAME: hubspot_sync
+      DB_USERNAME: postgres
+      KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+      KAFKA_SYNC_TOPIC: hubspot.sync.requested
+      KAFKA_CONSUMER_GROUP: hubspot-integration-group
+      HUBSPOT_API_BASE_URL: https://api.hubapi.com
+      SYNC_CRON_EXPRESSION: "*/30 * * * *"
+      SYNC_TIMEZONE: Asia/Kolkata
+
+    steps:
+      - name: Validate non-secret configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -n "$APP_ENV"
+          test -n "$LOG_LEVEL"
+          test -n "$DB_HOST"
+          test -n "$DB_PORT"
+          test -n "$DB_NAME"
+          test -n "$DB_USERNAME"
+          test -n "$KAFKA_BOOTSTRAP_SERVERS"
+          test -n "$KAFKA_SYNC_TOPIC"
+          test -n "$KAFKA_CONSUMER_GROUP"
+          test -n "$HUBSPOT_API_BASE_URL"
+          test -n "$SYNC_CRON_EXPRESSION"
+          test -n "$SYNC_TIMEZONE"
+
+          echo "Non-secret configuration variables are present."
+
+      - name: Verify required GitHub Secrets
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          HUBSPOT_ACCESS_TOKEN: ${{ secrets.HUBSPOT_ACCESS_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "$DB_PASSWORD" ]; then
+            echo "DB_PASSWORD secret is missing."
+            exit 1
+          fi
+
+          if [ -z "$HUBSPOT_ACCESS_TOKEN" ]; then
+            echo "HUBSPOT_ACCESS_TOKEN secret is missing."
+            exit 1
+          fi
+
+          echo "Required GitHub Secrets are available."
